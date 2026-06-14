@@ -167,6 +167,28 @@ body {
 .data-table tr:hover td { background: rgba(255,255,255,0.02); }
 .data-table .empty { color: var(--muted); font-style: italic; text-align: center; padding: 32px; }
 
+/* Scroll Wrappers for Tables */
+.table-wrapper {
+  max-height: 350px;
+  overflow-y: auto;
+  margin-bottom: 48px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--dark-2);
+}
+.table-wrapper::-webkit-scrollbar { width: 8px; }
+.table-wrapper::-webkit-scrollbar-track { background: transparent; }
+.table-wrapper::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+.table-wrapper::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+.table-wrapper .data-table { margin-bottom: 0; }
+.table-wrapper .data-table th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 1px 0 var(--border);
+}
+
 /* Question Stats */
 .q-stats { margin-bottom: 48px; }
 .q-stat-item {
@@ -306,7 +328,7 @@ body {
 
   <!-- UTM Analytics -->
   <div class="section-title">&#128227; Origem das Vendas e Trafego (UTMs)</div>
-  <div style="background:var(--dark-2);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:48px;">
+  <div class="table-wrapper" style="padding:24px; margin-bottom:48px;">
     <p style="font-size:0.75rem; color:var(--muted); margin-top:0; margin-bottom:16px;">
       Acompanhe de qual anuncio ou post os seus leads estao vindo. As vendas marcadas aqui representam cliques que foram para o checkout.
     </p>
@@ -318,16 +340,18 @@ body {
     <span style="display:inline-block; width:10px; height:10px; background:var(--success); border-radius:50%; margin-right:8px; animation: pulse-dot 2s infinite;"></span>
     Leads Ativos em Tempo Real
   </div>
-  <table class="data-table" id="live-table" style="margin-bottom: 48px;">
-    <thead>
-      <tr>
-        <th>Sessao / Nome do Lead</th>
-        <th>Ultima Atividade</th>
-        <th>Etapa Atual</th>
-      </tr>
-    </thead>
-    <tbody id="live-tbody"></tbody>
-  </table>
+  <div class="table-wrapper">
+    <table class="data-table" id="live-table">
+      <thead>
+        <tr>
+          <th>Sessao / Nome do Lead</th>
+          <th>Ultima Atividade</th>
+          <th>Etapa Atual</th>
+        </tr>
+      </thead>
+      <tbody id="live-tbody"></tbody>
+    </table>
+  </div>
 
   <!-- Funnel Visualization -->
   <div class="section-title">Funil de Conversao</div>
@@ -335,16 +359,18 @@ body {
 
   <!-- Drop-off Analysis -->
   <div class="section-title">Analise de Abandono (Onde os leads saem)</div>
-  <table class="data-table" id="dropoff-table" style="margin-bottom: 48px;">
-    <thead>
-      <tr>
-        <th>Etapa de Saida (Ultima acao)</th>
-        <th>Quantidade de Leads</th>
-        <th>% do Total de Abandonos</th>
-      </tr>
-    </thead>
-    <tbody id="dropoff-tbody"></tbody>
-  </table>
+  <div class="table-wrapper">
+    <table class="data-table" id="dropoff-table">
+      <thead>
+        <tr>
+          <th>Etapa de Saida (Ultima acao)</th>
+          <th>Quantidade de Leads</th>
+          <th>% do Total de Abandonos</th>
+        </tr>
+      </thead>
+      <tbody id="dropoff-tbody"></tbody>
+    </table>
+  </div>
 
   <!-- VIDEO ANALYTICS -->
   <div class="section-title">&#127916; Analytics do Video VSL</div>
@@ -395,17 +421,19 @@ body {
 
   <!-- Leads Table -->
   <div class="section-title">Leads Capturados</div>
-  <table class="data-table" id="leads-table">
-    <thead>
-      <tr>
-        <th>Nome</th>
-        <th>WhatsApp</th>
-        <th>Data/Hora</th>
-        <th>Sessao</th>
-      </tr>
-    </thead>
-    <tbody id="leads-tbody"></tbody>
-  </table>
+  <div class="table-wrapper">
+    <table class="data-table" id="leads-table">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>WhatsApp</th>
+          <th>Data/Hora</th>
+          <th>Sessao</th>
+        </tr>
+      </thead>
+      <tbody id="leads-tbody"></tbody>
+    </table>
+  </div>
 
   <!-- Event Log -->
   <div class="section-title">Log de Eventos (Ultimos 100)</div>
