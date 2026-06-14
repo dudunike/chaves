@@ -506,11 +506,11 @@ function applyDateFilter() {
 }
 
 function countEvents(events, type) {
-  return events.filter(e => e.type === type).length;
+  return new Set(events.filter(e => e.type === type && e.sessionId).map(e => e.sessionId)).size;
 }
 
 function countEventsWithMeta(events, type, metaKey, metaValue) {
-  return events.filter(e => e.type === type && e.meta && e.meta[metaKey] === metaValue).length;
+  return new Set(events.filter(e => e.type === type && e.meta && e.meta[metaKey] === metaValue && e.sessionId).map(e => e.sessionId)).size;
 }
 
 function getUniqueSessions(events) {
@@ -558,14 +558,15 @@ async function loadDashboard() {
   // Pass events to Video Analytics so it can filter by the same date range
   loadVideoAnalytics(events);
 
-  // Calculate KPIs
+  // Calculate KPIs - Deduplicated by sessionId
   const totalSessions = getUniqueSessions(events);
   const pageViews = countEvents(events, 'page_view');
   const introClicks = countEvents(events, 'intro_cta_click');
-  const leadsCount = leads.length;
+  const leadsCount = new Set(leads.filter(l => l.sessionId).map(l => l.sessionId)).size;
   const quizStarts = countEventsWithMeta(events, 'screen_view', 'screen', 'screen-quiz');
   const resultViews = countEvents(events, 'result_view');
-  const ctaClicks = countEvents(events, 'cta_click') + countEvents(events, 'cta_installment_click');
+  // Combine both CTA types and deduplicate
+  const ctaClicks = new Set(events.filter(e => (e.type === 'cta_click' || e.type === 'cta_installment_click') && e.sessionId).map(e => e.sessionId)).size;
   const stickyClicks = countEvents(events, 'sticky_cta_click');
 
   const leadRate = pageViews > 0 ? ((leadsCount / pageViews) * 100).toFixed(1) : '0.0';
@@ -924,7 +925,7 @@ async function loadDashboard() {
   const qLabels = ['Lead', 'Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Resultado', 'CTA'];
   const qCounts = [
     leadsCount,
-    ...QUESTION_LABELS.map((_, qi) => events.filter(e => e.type === 'question_answered' && e.meta && e.meta.question === qi + 1).length),
+    ...QUESTION_LABELS.map((_, qi) => new Set(events.filter(e => e.type === 'question_answered' && e.meta && e.meta.question === qi + 1 && e.sessionId).map(e => e.sessionId)).size),
     resultViews,
     ctaClicks
   ];
