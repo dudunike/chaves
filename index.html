@@ -775,8 +775,9 @@ body {
   box-shadow: 0 16px 40px rgba(0,0,0,0.4);
 }
 .content-item img {
-  width: 100%; height: 200px;
-  object-fit: cover; display: block;
+  width: 100%; height: auto;
+  object-fit: contain; display: block;
+  background: #fff; /* Fundo branco caso a imagem tenha bordas transparentes e precise de contraste */
 }
 .content-item .ci-body { padding: 20px; }
 .content-item h4 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
@@ -2523,7 +2524,7 @@ function handleCtaClick(e) {
 
   // Redirect to checkout after allowing pixels and tracking to fire
   setTimeout(() => {
-    window.location.href = 'https://ggcheckout.app/checkout/v5/duejOWa9yJnsLAJGdlcY';
+    window.location.href = 'https://ggcheckout.app/checkout/v5/aJcEFtYgGP5qVMjD6Cdq';
   }, 400);
 }
 
