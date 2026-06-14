@@ -771,7 +771,12 @@ async function loadDashboard() {
     if (diffMin <= 5) {
       activeCount++;
       let currentStage = 'Na Tela Inicial';
-      if (lastEvent.type.includes('cta_click')) currentStage = '<span style="color:var(--success);">No Checkout (Compra iniciada)</span>';
+      if (lastEvent.type.includes('cta_click')) currentStage = '<span style="color:var(--success); font-weight:bold;">No Checkout (Compra iniciada)</span>';
+      else if (lastEvent.type === 'video_complete') currentStage = '<span style="color:#A78BFA; font-weight:bold;">Terminou o VSL</span>';
+      else if (lastEvent.type.startsWith('video_')) {
+        const pct = lastEvent.meta && lastEvent.meta.pct ? lastEvent.meta.pct + '%' : '';
+        currentStage = `<span style="color:#A78BFA; font-weight:bold;">Assistindo o VSL ${pct}</span>`;
+      }
       else if (lastEvent.type === 'result_view' || (lastEvent.meta && lastEvent.meta.screen === 'screen-result')) currentStage = 'Lendo a Oferta / Resultado';
       else if (lastEvent.type === 'screen_view' && lastEvent.meta && lastEvent.meta.screen === 'screen-loading') currentStage = 'Aguardando Relatorio';
       else if (lastEvent.type === 'question_answered') currentStage = 'Respondendo Pergunta ' + (lastEvent.meta ? lastEvent.meta.question : '?');
