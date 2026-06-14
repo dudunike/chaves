@@ -13,8 +13,8 @@ export default async function handler(req, res) {
     try {
       const payload = req.body;
       
-      const SUPABASE_URL = 'https://knufkvvxbwptoxxlnwpg.supabase.co';
-      const SUPABASE_KEY = 'sb_publishable_5H-yd3hlXulNY79T285DQw_dcHrnrAJ';
+      const SUPABASE_URL = 'https://dqeyevscnuyqbwdhkqsv.supabase.co';
+      const SUPABASE_KEY = 'sb_publishable_vuadAZQRCewO-TZsLgOTYg_HFC7fxe3';
 
       // Detect event type from various gateway formats (Kiwify, PerfectPay, Hotmart, etc.)
       const eventType = payload.event || payload.event_type || payload.type || payload.status || 'Webhook Recebido';
