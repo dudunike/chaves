@@ -234,6 +234,34 @@ body {
 .event-time { color: var(--muted); font-size: 0.72rem; min-width: 160px; }
 .event-detail { color: var(--white); }
 
+/* Insights */
+.insights-section { margin-bottom: 48px; }
+.insight-card {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 16px 20px; border-radius: 10px;
+  margin-bottom: 10px; font-size: 0.85rem;
+  line-height: 1.5;
+}
+.insight-card.success { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); color: #34D399; }
+.insight-card.warning { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); color: #FBBF24; }
+.insight-card.danger { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); color: #F87171; }
+.insight-card.info { background: rgba(37,99,235,0.08); border: 1px solid rgba(37,99,235,0.2); color: #60A5FA; }
+.insight-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 2px; }
+.insight-text strong { color: var(--white); }
+
+.q-flow-bar {
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 8px;
+}
+.q-flow-step {
+  flex: 1; text-align: center; padding: 10px 4px;
+  border-radius: 8px; font-size: 0.72rem; font-weight: 700;
+  color: #fff; position: relative;
+}
+.q-flow-arrow {
+  color: var(--muted); font-size: 0.7rem; flex-shrink: 0;
+}
+
 @media(max-width: 768px) {
   .admin-body { padding: 20px; }
   .funnel-label { width: 120px; font-size: 0.75rem; }
@@ -264,6 +292,17 @@ body {
 
   <!-- KPI Cards -->
   <div class="kpi-grid" id="kpi-grid"></div>
+
+  <!-- Insights Automaticos -->
+  <div class="section-title">&#128161; Insights Automaticos</div>
+  <div class="insights-section" id="insights-section"></div>
+
+  <!-- Fluxo de Perguntas -->
+  <div class="section-title">&#128202; Conversao por Pergunta do Quiz</div>
+  <div style="background:var(--dark-2);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:48px;">
+    <div id="q-flow-container"></div>
+    <div id="q-flow-table"></div>
+  </div>
 
   <!-- Live Active Leads -->
   <div class="section-title">
@@ -793,6 +832,131 @@ async function loadDashboard() {
     });
   }
   document.getElementById('event-log').innerHTML = logHtml;
+
+  // ============================================================
+  //  INSIGHTS AUTOMATICOS
+  // ============================================================
+  let insightsHtml = '';
+
+  // Insight: Taxa de captura de lead
+  if (pageViews > 10) {
+    const lr = parseFloat(leadRate);
+    if (lr < 15) {
+      insightsHtml += `<div class="insight-card danger"><span class="insight-icon">🔴</span><div class="insight-text">Taxa de captura de lead muito baixa: <strong>${leadRate}%</strong>. A headline ou copy da intro pode nao estar gerando curiosidade suficiente. Considere testar novas abordagens no titulo.</div></div>`;
+    } else if (lr < 30) {
+      insightsHtml += `<div class="insight-card warning"><span class="insight-icon">⚠️</span><div class="insight-text">Taxa de captura de lead: <strong>${leadRate}%</strong>. Aceitavel, mas pode melhorar. Teste trocar o texto do botao "Iniciar Diagnostico" por algo mais direto como "Descobrir Agora".</div></div>`;
+    } else {
+      insightsHtml += `<div class="insight-card success"><span class="insight-icon">✅</span><div class="insight-text">Taxa de captura de lead excelente: <strong>${leadRate}%</strong>. A intro esta performando bem.</div></div>`;
+    }
+  }
+
+  // Insight: Taxa de conclusao do quiz
+  if (quizStarts > 5) {
+    const qr = parseFloat(quizCompleteRate);
+    if (qr < 40) {
+      insightsHtml += `<div class="insight-card danger"><span class="insight-icon">🔴</span><div class="insight-text">Apenas <strong>${quizCompleteRate}%</strong> dos leads completam o quiz. As perguntas podem estar longas ou confusas. Veja abaixo qual pergunta tem mais abandono.</div></div>`;
+    } else if (qr < 70) {
+      insightsHtml += `<div class="insight-card warning"><span class="insight-icon">⚠️</span><div class="insight-text">Taxa de conclusao do quiz: <strong>${quizCompleteRate}%</strong>. Normal, mas investigue abaixo se alguma pergunta especifica esta causando abandono.</div></div>`;
+    } else {
+      insightsHtml += `<div class="insight-card success"><span class="insight-icon">✅</span><div class="insight-text">Quiz com alta taxa de conclusao: <strong>${quizCompleteRate}%</strong>. As perguntas estao engajando bem os leads.</div></div>`;
+    }
+  }
+
+  // Insight: Taxa de checkout
+  if (resultViews > 5) {
+    const cr = parseFloat(ctaRate);
+    if (cr < 10) {
+      insightsHtml += `<div class="insight-card danger"><span class="insight-icon">🔴</span><div class="insight-text">Taxa de clique no checkout muito baixa: <strong>${ctaRate}%</strong>. A pagina de resultado/oferta pode nao estar convencendo. Teste mudar o preco, copy ou garantia.</div></div>`;
+    } else if (cr < 25) {
+      insightsHtml += `<div class="insight-card warning"><span class="insight-icon">⚠️</span><div class="insight-text">Taxa de checkout: <strong>${ctaRate}%</strong>. Considere adicionar mais urgencia (escassez, timer mais curto) ou reforcar a garantia de 7 dias.</div></div>`;
+    } else {
+      insightsHtml += `<div class="insight-card success"><span class="insight-icon">✅</span><div class="insight-text">Taxa de checkout forte: <strong>${ctaRate}%</strong>. A oferta esta convertendo bem.</div></div>`;
+    }
+  }
+
+  // Insight: Vendas reais
+  if (ctaClicks > 0 && paidSalesCount === 0) {
+    insightsHtml += `<div class="insight-card info"><span class="insight-icon">💡</span><div class="insight-text">Voce tem <strong>${ctaClicks} cliques no checkout</strong> mas nenhuma venda confirmada via webhook. Verifique se o webhook do checkout esta configurado corretamente.</div></div>`;
+  }
+
+  // Insight: Tempo medio no site
+  if (Object.keys(sessions).length > 3) {
+    let totalDurations = 0;
+    let countDurations = 0;
+    Object.values(sessions).forEach(sessEvents => {
+      if (sessEvents.length >= 2) {
+        const first = new Date(sessEvents[0].timestamp).getTime();
+        const last = new Date(sessEvents[sessEvents.length - 1].timestamp).getTime();
+        const dur = (last - first) / 60000; // minutos
+        if (dur > 0 && dur < 120) { // filtrar outliers
+          totalDurations += dur;
+          countDurations++;
+        }
+      }
+    });
+    if (countDurations > 0) {
+      const avgMin = (totalDurations / countDurations).toFixed(1);
+      if (avgMin < 1.5) {
+        insightsHtml += `<div class="insight-card warning"><span class="insight-icon">⏱️</span><div class="insight-text">Tempo medio por sessao: <strong>${avgMin} min</strong>. Muito curto — os leads podem estar saindo rapido. Verifique se a intro prende atencao.</div></div>`;
+      } else {
+        insightsHtml += `<div class="insight-card success"><span class="insight-icon">⏱️</span><div class="insight-text">Tempo medio por sessao: <strong>${avgMin} min</strong>. Os leads estao engajados e passando tempo no funil.</div></div>`;
+      }
+    }
+  }
+
+  if (!insightsHtml) {
+    insightsHtml = '<div class="insight-card info"><span class="insight-icon">📊</span><div class="insight-text">Dados insuficientes para gerar insights. Aguarde mais visitas no funil.</div></div>';
+  }
+  document.getElementById('insights-section').innerHTML = insightsHtml;
+
+  // ============================================================
+  //  CONVERSAO POR PERGUNTA (FLOW)
+  // ============================================================
+  const qLabels = ['Lead', 'Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Resultado', 'CTA'];
+  const qCounts = [
+    leadsCount,
+    ...QUESTION_LABELS.map((_, qi) => events.filter(e => e.type === 'question_answered' && e.meta && e.meta.question === qi + 1).length),
+    resultViews,
+    ctaClicks
+  ];
+
+  let flowHtml = '<div class="q-flow-bar">';
+  qLabels.forEach((label, i) => {
+    const count = qCounts[i] || 0;
+    const maxCount = Math.max(...qCounts, 1);
+    const pctWidth = Math.max(15, (count / maxCount) * 100);
+    const color = i === 0 ? '#2563EB' : i <= 7 ? '#F59E0B' : i === 8 ? '#10B981' : '#EF4444';
+    flowHtml += `<div class="q-flow-step" style="background: ${color}; opacity: ${0.4 + (count / maxCount) * 0.6};">${label}<br><strong>${count}</strong></div>`;
+    if (i < qLabels.length - 1) flowHtml += '<span class="q-flow-arrow">→</span>';
+  });
+  flowHtml += '</div>';
+
+  // Table with drop-off per question
+  let flowTableHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;margin-top:16px;">';
+  flowTableHtml += '<thead><tr>';
+  flowTableHtml += '<th style="text-align:left;padding:8px 12px;color:var(--muted);font-size:0.7rem;text-transform:uppercase;border-bottom:1px solid var(--border)">Etapa</th>';
+  flowTableHtml += '<th style="text-align:right;padding:8px 12px;color:var(--muted);font-size:0.7rem;text-transform:uppercase;border-bottom:1px solid var(--border)">Leads</th>';
+  flowTableHtml += '<th style="text-align:right;padding:8px 12px;color:var(--muted);font-size:0.7rem;text-transform:uppercase;border-bottom:1px solid var(--border)">Perda</th>';
+  flowTableHtml += '<th style="text-align:right;padding:8px 12px;color:var(--muted);font-size:0.7rem;text-transform:uppercase;border-bottom:1px solid var(--border)">Taxa</th>';
+  flowTableHtml += '</tr></thead><tbody>';
+
+  for (let i = 0; i < qLabels.length; i++) {
+    const count = qCounts[i] || 0;
+    const prev = i > 0 ? (qCounts[i - 1] || 0) : count;
+    const lost = Math.max(0, prev - count);
+    const dropRate = prev > 0 ? ((lost / prev) * 100).toFixed(1) : '0.0';
+    const isHigh = parseFloat(dropRate) > 30;
+    flowTableHtml += `<tr>
+      <td style="padding:8px 12px;border-bottom:1px solid var(--border);font-weight:600;">${qLabels[i]}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:right;">${count}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:right;color:${lost > 0 ? 'var(--danger)' : 'var(--muted)'}">${i > 0 ? (lost > 0 ? '-' + lost : '0') : '—'}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:right;font-weight:700;color:${isHigh ? 'var(--danger)' : 'var(--muted)'}">${i > 0 ? dropRate + '%' : '—'}</td>
+    </tr>`;
+  }
+  flowTableHtml += '</tbody></table>';
+
+  document.getElementById('q-flow-container').innerHTML = flowHtml;
+  document.getElementById('q-flow-table').innerHTML = flowTableHtml;
 }
 
 // Settings / Config Logic
