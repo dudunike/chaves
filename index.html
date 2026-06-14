@@ -1978,7 +1978,12 @@ function getAnalytics() {
 function saveAnalytics(data) {
   localStorage.setItem('chav_analytics', JSON.stringify(data));
 }
+
+const SUPABASE_URL = 'https://knufkvvxbwptoxxlnwpg.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_5H-yd3hlXulNY79T285DQw_dcHrnrAJ';
+
 function trackEvent(type, meta) {
+  // Salva no localStorage (legado)
   const data = getAnalytics();
   data.events.push({
     type: type,
@@ -1987,8 +1992,26 @@ function trackEvent(type, meta) {
     meta: meta || null
   });
   saveAnalytics(data);
+
+  // Envia para o Supabase
+  fetch(`${SUPABASE_URL}/rest/v1/chaves_events`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify({
+      session_id: SESSION_ID,
+      type: type,
+      meta: meta || null
+    })
+  }).catch(() => {});
 }
+
 function trackLead(name, whatsapp) {
+  // Salva no localStorage (legado)
   const data = getAnalytics();
   data.leads.push({
     name: name,
@@ -1997,6 +2020,22 @@ function trackLead(name, whatsapp) {
     sessionId: SESSION_ID
   });
   saveAnalytics(data);
+
+  // Envia para o Supabase
+  fetch(`${SUPABASE_URL}/rest/v1/chaves_leads`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify({
+      session_id: SESSION_ID,
+      name: name,
+      whatsapp: whatsapp
+    })
+  }).catch(() => {});
 }
 
 // Session

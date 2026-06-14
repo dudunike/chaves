@@ -380,16 +380,51 @@ const QUESTION_OPTIONS = [
   ['Procedimentos claros', 'Ferramentas certas', 'Info confiavel', 'Velocidade/confianca']
 ];
 
-function getAnalytics() {
+const SUPABASE_URL = 'https://knufkvvxbwptoxxlnwpg.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_5H-yd3hlXulNY79T285DQw_dcHrnrAJ';
+
+async function getAnalytics() {
   try {
-    return JSON.parse(localStorage.getItem('chav_analytics') || '{"events":[],"leads":[],"sessions":[]}');
-  } catch(e) { return { events: [], leads: [], sessions: [] }; }
+    const headers = {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`
+    };
+
+    const [evRes, leadsRes, hooksRes] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/chaves_events?select=*&limit=5000&order=created_at.desc`, { headers }),
+      fetch(`${SUPABASE_URL}/rest/v1/chaves_leads?select=*&limit=1000&order=created_at.desc`, { headers }),
+      fetch(`${SUPABASE_URL}/rest/v1/chaves_webhooks?select=*&limit=1000`, { headers })
+    ]);
+
+    const evData = await evRes.json();
+    const leadsData = await leadsRes.json();
+    const hooksData = await hooksRes.json();
+
+    // Transform back to old format
+    const events = evData.map(e => ({
+      type: e.type,
+      timestamp: e.created_at,
+      sessionId: e.session_id,
+      meta: e.meta
+    })).reverse(); // Oldest first for funnel logic
+
+    const leads = leadsData.map(l => ({
+      name: l.name,
+      whatsapp: l.whatsapp,
+      timestamp: l.created_at,
+      sessionId: l.session_id
+    })).reverse();
+
+    return { events, leads, webhooks: hooksData };
+  } catch (e) {
+    console.error('Erro ao buscar do Supabase', e);
+    return { events: [], leads: [], webhooks: [] };
+  }
 }
 
-function clearData() {
-  if (confirm('Tem certeza que deseja limpar todos os dados de analytics?')) {
-    localStorage.removeItem('chav_analytics');
-    loadDashboard();
+async function clearData() {
+  if (confirm('Limpando dados no Supabase... Isso não é suportado pelo painel para não apagar o banco. Para apagar, acesse o painel do Supabase diretamente.')) {
+    // Disabled destructive action
   }
 }
 
@@ -418,10 +453,13 @@ function getEventTypeClass(type) {
   return 'screen';
 }
 
-function loadDashboard() {
-  const data = getAnalytics();
+async function loadDashboard() {
+  document.getElementById('kpi-grid').innerHTML = '<div style="padding: 20px; color: var(--success); font-weight: bold;">Conectando ao Banco de Dados (Supabase)...</div>';
+  
+  const data = await getAnalytics();
   const events = data.events || [];
   const leads = data.leads || [];
+  const webhooks = data.webhooks || [];
 
   // Calculate KPIs
   const totalSessions = getUniqueSessions(events);
@@ -436,6 +474,19 @@ function loadDashboard() {
   const leadRate = pageViews > 0 ? ((leadsCount / pageViews) * 100).toFixed(1) : '0.0';
   const quizCompleteRate = quizStarts > 0 ? ((resultViews / quizStarts) * 100).toFixed(1) : '0.0';
   const ctaRate = resultViews > 0 ? ((ctaClicks / resultViews) * 100).toFixed(1) : '0.0';
+  
+  // Real revenue from Supabase Webhooks
+  let realRevenue = 0;
+  let paidSalesCount = 0;
+  webhooks.forEach(w => {
+    // Only count if it's a paid event (depends on platform, checking common names)
+    const type = w.event_type ? w.event_type.toLowerCase() : '';
+    if (type.includes('paid') || type.includes('approved') || type.includes('aprovad')) {
+      realRevenue += parseFloat(w.amount || 0);
+      paidSalesCount++;
+    }
+  });
+  
   const potentialRevenue = ctaClicks * 47;
 
   // KPI Cards
@@ -461,9 +512,14 @@ function loadDashboard() {
       <div class="kpi-sub">Taxa: ${ctaRate}% (Iniciou Checkout)</div>
     </div>
     <div class="kpi" style="border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.05);">
-      <div class="kpi-label" style="color: #34D399;">Receita Gerada (Cliques x R$47)</div>
-      <div class="kpi-value green">R$ ${potentialRevenue.toLocaleString('pt-BR')}</div>
-      <div class="kpi-sub">Valor de conversao dos cliques</div>
+      <div class="kpi-label" style="color: #34D399;">Vendas Reais (Webhooks)</div>
+      <div class="kpi-value green">R$ ${realRevenue.toLocaleString('pt-BR')}</div>
+      <div class="kpi-sub">${paidSalesCount} Vendas Aprovadas Recebidas</div>
+    </div>
+    <div class="kpi" style="border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.05);">
+      <div class="kpi-label" style="color: #F59E0B;">Receita Potencial (Cliques)</div>
+      <div class="kpi-value amber">R$ ${potentialRevenue.toLocaleString('pt-BR')}</div>
+      <div class="kpi-sub">Estimativa baseada em cliques</div>
     </div>
   `;
 
