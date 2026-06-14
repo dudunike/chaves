@@ -2486,6 +2486,8 @@ setDynamicDate();
    CTA CLICK HANDLER (Webhook + Pixel + Tracking)
 ============================================================ */
 function handleCtaClick(e) {
+  e.preventDefault();
+  
   // Track the event
   trackEvent('cta_click', { leadName: userName, leadWhatsapp: userWhatsapp });
 
@@ -2515,6 +2517,11 @@ function handleCtaClick(e) {
   if (typeof gtag === 'function' && config.gtagConversionId) {
     gtag('event', 'conversion', { send_to: config.gtagConversionId });
   }
+
+  // Redirect to checkout after allowing pixels and tracking to fire
+  setTimeout(() => {
+    window.location.href = 'https://ggcheckout.app/checkout/v5/duejOWa9yJnsLAJGdlcY';
+  }, 400);
 }
 
 /* ============================================================
