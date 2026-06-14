@@ -1372,46 +1372,99 @@ function loadVideoAnalytics(filteredEvents) {
   document.getElementById('video-insights').innerHTML = vslInsHtml;
 }
 
-// ── AUTENTICACAO ──
-const ADMIN_EMAIL = 'eduardoeustaquio369@gmail.com';
-const ADMIN_PASS  = 'Edu301128-';
+// ── AUTENTICACAO SEGURA (SHA-256 via Web Crypto API) ──
+// Credenciais armazenadas APENAS como hash — texto plano nunca fica no codigo
+const _H = {
+  e: '9ff5933ae021f8ffaf34ed01f8e30b46df4eb458fcf0b0aa83d35358b3a47b54',
+  p: '5ccf5ff5161e085684862e9dd842e573556ecbb07614633c87d4d30d4654728f'
+};
 const SESSION_KEY = 'chav_admin_auth';
 
-function doLogin() {
+// Bloqueio por tentativas: max 5 erros, trava por 15 min
+var _attempts = 0;
+var _lockUntil = 0;
+
+async function _sha256(str) {
+  var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(function(b) { return b.toString(16).padStart(2,'0'); }).join('');
+}
+
+async function doLogin() {
+  var errEl = document.getElementById('login-error');
+
+  // Verifica bloqueio por tentativas excessivas
+  if (Date.now() < _lockUntil) {
+    var minLeft = Math.ceil((_lockUntil - Date.now()) / 60000);
+    errEl.textContent = 'Muitas tentativas. Tente novamente em ' + minLeft + ' minuto(s).';
+    errEl.classList.add('show');
+    return;
+  }
+
   var email = document.getElementById('login-email').value.trim().toLowerCase();
   var pass  = document.getElementById('login-pass').value;
-  var errEl = document.getElementById('login-error');
 
   document.getElementById('login-email').classList.remove('error');
   document.getElementById('login-pass').classList.remove('error');
   errEl.classList.remove('show');
+  errEl.textContent = 'E-mail ou senha incorretos. Tente novamente.';
 
-  if (email !== ADMIN_EMAIL || pass !== ADMIN_PASS) {
-    document.getElementById('login-email').classList.add('error');
-    document.getElementById('login-pass').classList.add('error');
+  // Bloqueia envio com campos vazios
+  if (!email || !pass) {
     errEl.classList.add('show');
-    document.getElementById('login-pass').value = '';
-    document.getElementById('login-pass').focus();
     return;
   }
 
-  // Grava sessao com timestamp (expira em 8h)
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify({ ok: true, ts: Date.now() }));
-  showAdmin();
+  // Desabilita botao durante hash (evita duplo clique)
+  var btn = document.querySelector('.btn-login');
+  if (btn) { btn.disabled = true; btn.textContent = 'Verificando...'; }
+
+  try {
+    var he = await _sha256(email);
+    var hp = await _sha256(pass);
+
+    if (he !== _H.e || hp !== _H.p) {
+      _attempts++;
+      if (_attempts >= 5) {
+        _lockUntil = Date.now() + 15 * 60 * 1000;
+        _attempts = 0;
+        errEl.textContent = 'Acesso bloqueado por 15 minutos apos multiplas tentativas incorretas.';
+      }
+      document.getElementById('login-email').classList.add('error');
+      document.getElementById('login-pass').classList.add('error');
+      errEl.classList.add('show');
+      document.getElementById('login-pass').value = '';
+      document.getElementById('login-pass').focus();
+      return;
+    }
+
+    // Credenciais corretas: reseta tentativas e cria sessao
+    _attempts = 0;
+    // Token de sessao: hash do timestamp + user-agent (unico por dispositivo/sessao)
+    var sessionToken = await _sha256(Date.now().toString() + navigator.userAgent);
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+      ok: true,
+      ts: Date.now(),
+      token: sessionToken
+    }));
+    showAdmin();
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Entrar no Painel'; }
+  }
 }
 
 function doLogout() {
   sessionStorage.removeItem(SESSION_KEY);
   document.getElementById('admin-content').style.display = 'none';
-  document.getElementById('login-overlay').style.display  = 'flex';
+  document.getElementById('login-overlay').style.display = 'flex';
   document.getElementById('login-email').value = '';
   document.getElementById('login-pass').value  = '';
   document.getElementById('login-error').classList.remove('show');
+  document.getElementById('login-error').textContent = 'E-mail ou senha incorretos. Tente novamente.';
 }
 
 function showAdmin() {
-  document.getElementById('login-overlay').style.display  = 'none';
-  document.getElementById('admin-content').style.display  = 'block';
+  document.getElementById('login-overlay').style.display = 'none';
+  document.getElementById('admin-content').style.display = 'block';
   loadConfigUI();
   loadDashboard();
 }
@@ -1421,8 +1474,7 @@ function checkAuth() {
     var raw = sessionStorage.getItem(SESSION_KEY);
     if (!raw) return false;
     var s = JSON.parse(raw);
-    // Sessao valida por 8 horas
-    if (!s.ok || Date.now() - s.ts > 8 * 3600 * 1000) {
+    if (!s.ok || !s.token || Date.now() - s.ts > 8 * 3600 * 1000) {
       sessionStorage.removeItem(SESSION_KEY);
       return false;
     }
@@ -1434,7 +1486,6 @@ function checkAuth() {
 if (checkAuth()) {
   showAdmin();
 } else {
-  // Foca no campo de email ao carregar
   setTimeout(function() {
     var el = document.getElementById('login-email');
     if (el) el.focus();
