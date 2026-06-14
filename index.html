@@ -1534,7 +1534,11 @@ footer {
     </p>
     <div class="form-group">
       <label>Seu nome</label>
-      <input type="text" id="lead-name" placeholder="Ex: Joao" autocomplete="given-name" onkeydown="if(event.key==='Enter') captureLead()">
+      <input type="text" id="lead-name" placeholder="Ex: Joao" autocomplete="given-name" onkeydown="if(event.key==='Enter') document.getElementById('lead-whats').focus()">
+    </div>
+    <div class="form-group">
+      <label>WhatsApp (Opcional)</label>
+      <input type="tel" id="lead-whats" placeholder="(11) 99999-9999" autocomplete="tel" onkeydown="if(event.key==='Enter') captureLead()">
     </div>
 
     <div style="margin-bottom: 20px; padding: 12px 16px; background: rgba(16,185,129,0.08); border-radius: 8px; border: 1px solid rgba(16,185,129,0.2); font-size: 0.82rem; color: #34D399; font-weight: 600; display: flex; align-items: center; gap: 10px; text-align: left;">
@@ -2086,13 +2090,13 @@ const QUESTIONS = [
     ]
   },
   {
-    text: 'Voce consegue atender qualquer modelo de fechadura residencial?',
-    hint: 'Considere marcas variadas, modelos novos e antigos.',
+    text: 'Quanto voce quer faturar por mes com servicos de codificacao?',
+    hint: 'Isso ajuda a entender a escala do seu objetivo atual.',
     options: [
-      { text: 'Nao — me perco em muitos modelos', sub: 'Falta referencia tecnica organizada', score: 1, tag: 'A' },
-      { text: 'Parcialmente — algumas me travam', sub: 'Modelos especificos geram duvida', score: 2, tag: 'B' },
-      { text: 'Na maioria sim', sub: 'Algumas situacoes me surpreendem', score: 3, tag: 'C' },
-      { text: 'Sim — atendo qualquer uma', sub: 'Dominio tecnico amplo', score: 4, tag: 'D' },
+      { text: 'Ate R$ 2.000', sub: 'Quero comecar a lucrar com codificacao', score: 1, tag: 'A' },
+      { text: 'De R$ 2.000 a R$ 5.000', sub: 'Ja tenho demanda, preciso converter', score: 2, tag: 'B' },
+      { text: 'De R$ 5.000 a R$ 10.000', sub: 'Quero escalar minha operacao', score: 3, tag: 'C' },
+      { text: 'Acima de R$ 10.000', sub: 'Quero dominar o mercado na minha regiao', score: 4, tag: 'D' },
     ]
   },
   {
@@ -2116,13 +2120,13 @@ const QUESTIONS = [
     ]
   },
   {
-    text: 'O que mais faz falta na sua operacao hoje?',
-    hint: 'Escolha o que mais pesa na sua rotina.',
+    text: 'Se existisse um material prático que resolvesse essas lacunas e acelerasse seus serviços, você investiria hoje?',
+    hint: 'Responda com base na urgencia de melhorar sua operacao.',
     options: [
-      { text: 'Procedimentos claros e organizados', sub: 'Um guia pratico para consultar em campo', score: 1, tag: 'A' },
-      { text: 'Saber quais ferramentas comprar', sub: 'Investir certo sem desperdicar dinheiro', score: 2, tag: 'B' },
-      { text: 'Fonte de informacao confiavel', sub: 'Parar de depender de grupo de WhatsApp', score: 3, tag: 'C' },
-      { text: 'Velocidade e confianca tecnica', sub: 'Atender mais rapido e cobrar mais', score: 4, tag: 'D' },
+      { text: 'Com certeza', sub: 'Preciso resolver isso e aumentar minha margem logo', score: 4, tag: 'A' },
+      { text: 'Sim, se o preco for justo', sub: 'Estou disposto a investir para melhorar', score: 3, tag: 'B' },
+      { text: 'Talvez', sub: 'Depende do formato e do que estiver incluido', score: 2, tag: 'C' },
+      { text: 'Nao sei dizer', sub: 'Preciso entender melhor onde estou falhando', score: 1, tag: 'D' },
     ]
   }
 ];
@@ -2209,15 +2213,17 @@ function showScreen(id) {
 ============================================================ */
 function captureLead() {
   const name = document.getElementById('lead-name').value.trim();
+  const whats = document.getElementById('lead-whats').value.trim();
+  
   if (!name) {
     document.getElementById('lead-name').style.borderColor = '#EF4444';
     document.getElementById('lead-name').focus();
     return;
   }
   userName = name;
-  userWhatsapp = '';
-  trackLead(name, '');
-  trackEvent('lead_captured', { name: name });
+  userWhatsapp = whats;
+  trackLead(name, whats);
+  trackEvent('lead_captured', { name: name, whatsapp: whats });
   sendLeadWebhook();
 
   document.getElementById('ph').classList.remove('hidden');
@@ -2371,9 +2377,9 @@ function buildResult() {
   const refusedPerWeek = q5Answer ? (q5Answer.refusedPerWeek || 2) : 2;
   const avgValue = q6Answer ? (q6Answer.avgValue || 350) : 350;
   
-  // Calculate raw loss and cap it between 3,000 and 5,000 to keep it realistic
+  // Calculate raw loss and cap it between 2,000 and 12,000 for more realism
   let rawLoss = Math.round(refusedPerWeek * 4 * avgValue);
-  const monthlyLoss = Math.min(Math.max(rawLoss, 3000), 5000);
+  const monthlyLoss = Math.min(Math.max(rawLoss, 2000), 12000);
 
   // Set greeting
   const firstName = userName.split(' ')[0];
