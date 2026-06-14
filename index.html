@@ -2363,7 +2363,10 @@ function buildResult() {
   const q6Answer = answers[5]; // avg value
   const refusedPerWeek = q5Answer ? (q5Answer.refusedPerWeek || 2) : 2;
   const avgValue = q6Answer ? (q6Answer.avgValue || 350) : 350;
-  const monthlyLoss = Math.round(refusedPerWeek * 4 * avgValue);
+  
+  // Calculate raw loss and cap it between 3,000 and 5,000 to keep it realistic
+  let rawLoss = Math.round(refusedPerWeek * 4 * avgValue);
+  const monthlyLoss = Math.min(Math.max(rawLoss, 3000), 5000);
 
   // Set greeting
   const firstName = userName.split(' ')[0];
