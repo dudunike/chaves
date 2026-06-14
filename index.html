@@ -1245,14 +1245,45 @@ footer {
 .p-installment { display: none; }
 
 /* ============================================================
-   CTA PULSE ANIMATION
+   CTA BOUNCE + PULSE ANIMATION
 ============================================================ */
 .btn-cta--pulse {
-  animation: ctaPulse 3s ease-in-out infinite;
+  animation: ctaBounce 2.4s ease-in-out infinite;
 }
-@keyframes ctaPulse {
-  0%, 100% { box-shadow: 0 10px 32px rgba(16,185,129,0.35); }
-  50% { box-shadow: 0 10px 48px rgba(16,185,129,0.65), 0 0 0 6px rgba(16,185,129,0.12); }
+@keyframes ctaBounce {
+  0%, 100% { transform: translateY(0);   box-shadow: 0 10px 32px rgba(16,185,129,0.35); }
+  35%       { transform: translateY(-6px); box-shadow: 0 20px 44px rgba(16,185,129,0.55), 0 0 0 6px rgba(16,185,129,0.10); }
+  65%       { transform: translateY(-3px); box-shadow: 0 14px 38px rgba(16,185,129,0.45); }
+}
+
+/* ============================================================
+   LIVE VIEWERS BADGE (abaixo do video VSL)
+============================================================ */
+.live-viewers-wrap { text-align: center; margin-top: 14px; }
+.live-viewers {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(239,68,68,0.09);
+  border: 1px solid rgba(239,68,68,0.28);
+  border-radius: 20px; padding: 5px 16px;
+  font-size: 0.72rem; font-weight: 700; color: #F87171;
+}
+.live-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #EF4444; flex-shrink: 0;
+  animation: pulse-dot 1.4s infinite;
+}
+
+/* ============================================================
+   CTA FINAL (rodape da oferta)
+============================================================ */
+.cta-final-wrap {
+  text-align: center; padding: 40px 0 8px;
+}
+.cta-final-lock {
+  margin-top: 12px; font-size: 0.73rem;
+  color: var(--muted);
+  display: flex; align-items: center;
+  justify-content: center; gap: 5px;
 }
 
 /* ============================================================
@@ -1655,6 +1686,12 @@ footer {
           </div>
         </div>
       </div>
+      <div class="live-viewers-wrap reveal-up">
+        <div class="live-viewers">
+          <span class="live-dot"></span>
+          <span id="live-count">38 pessoas</span> assistindo agora
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1836,14 +1873,7 @@ footer {
       <div class="price-box reveal-up">
         <img src="design_sem_nome_(4).png" alt="Guia do Chaveiro 2.0" class="cover-img reveal-up" style="transition-delay: 0.1s;">
 
-        <div class="social-proof reveal-up" style="margin-bottom:20px; transition-delay: 0.2s;">
-          <div class="sp-tag">
-            <span class="sp-dot"></span>
-            <span id="sp-count">27 pessoas</span> estao vendo esta oferta agora
-          </div>
-        </div>
-
-        <h3 class="reveal-up" style="transition-delay: 0.3s;">Guia do Chaveiro 2.0</h3>
+        <h3 class="reveal-up" style="transition-delay: 0.2s;">Guia do Chaveiro 2.0</h3>
         <p class="price-desc reveal-up" style="transition-delay: 0.4s;">Do Residencial a Codificacao Avancada — entrega imediata no seu e-mail.</p>
 
         <div class="p-special reveal-up" id="date-badge" style="transition-delay: 0.5s;">Oferta exclusiva — carregando data...</div>
@@ -1938,6 +1968,18 @@ footer {
             <div class="faq-q" onclick="toggleFaq(this)">E atualizado com modelos novos? <span class="faq-arrow">+</span></div>
             <div class="faq-a">Sim. A versao 2.0 inclui procedimentos para modelos 2022-2024 com os protocolos mais recentes de programacao e codificacao.</div>
           </div>
+        </div>
+      </div>
+
+      <!-- CTA FINAL -->
+      <div class="cta-final-wrap reveal-up">
+        <a href="#" class="btn-cta btn-cta--pulse" onclick="handleCtaClick(event)">
+          QUERO DESTRAVAR ACESSO AGORA
+          <span class="btn-cta-sub">R$ 47 — Acesso vitalicio + atualizacoes para sempre</span>
+        </a>
+        <div class="cta-final-lock">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Pagamento 100% seguro — Garantia de 7 dias ou seu dinheiro de volta
         </div>
       </div>
 
@@ -2497,11 +2539,12 @@ function buildResult() {
   // Start timer
   startTimer();
 
-  // Social proof randomizer
+  // Live viewers randomizer (abaixo do video)
   setInterval(() => {
-    const n = Math.floor(Math.random() * 30) + 15;
-    document.getElementById('sp-count').textContent = n + ' pessoas';
-  }, 8000);
+    const n = Math.floor(Math.random() * 28) + 22;
+    const el = document.getElementById('live-count');
+    if (el) el.textContent = n + ' pessoas';
+  }, 7000);
 }
 
 /* ============================================================
