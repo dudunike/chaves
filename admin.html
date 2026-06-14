@@ -289,9 +289,131 @@ body {
   .funnel-label { width: 120px; font-size: 0.75rem; }
   .kpi-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* ── LOGIN OVERLAY ── */
+#login-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--dark);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.login-card {
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 48px 40px;
+  width: 100%; max-width: 420px;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+  position: relative;
+}
+.login-logo {
+  text-align: center; margin-bottom: 32px;
+}
+.login-logo .login-title {
+  font-size: 1.4rem; font-weight: 900;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--white); margin-bottom: 4px;
+}
+.login-logo .login-sub {
+  font-size: 0.78rem; color: var(--muted); font-weight: 500;
+}
+.login-logo .lock-icon {
+  width: 56px; height: 56px;
+  background: rgba(37,99,235,0.12);
+  border: 1px solid rgba(37,99,235,0.3);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+}
+.login-logo .lock-icon svg { color: #60A5FA; }
+.login-field { margin-bottom: 18px; }
+.login-field label {
+  display: block; font-size: 0.72rem; font-weight: 700;
+  color: var(--muted); text-transform: uppercase;
+  letter-spacing: 0.08em; margin-bottom: 8px;
+}
+.login-field input {
+  width: 100%;
+  background: rgba(10,15,28,0.7);
+  border: 1px solid var(--border);
+  color: var(--white);
+  padding: 14px 16px; border-radius: 10px;
+  font-family: 'Inter', sans-serif; font-size: 0.95rem;
+  outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.login-field input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+}
+.login-field input.error { border-color: var(--danger); }
+.btn-login {
+  width: 100%; padding: 16px;
+  background: var(--primary); color: #fff;
+  border: none; border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 800; font-size: 1rem;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  cursor: pointer; margin-top: 8px;
+  transition: background 0.2s, transform 0.15s;
+  box-shadow: 0 6px 20px rgba(37,99,235,0.35);
+}
+.btn-login:hover { background: #1D4ED8; transform: translateY(-1px); }
+.btn-login:active { transform: translateY(0); }
+.login-error {
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.25);
+  color: #F87171;
+  font-size: 0.82rem; font-weight: 600;
+  padding: 12px 16px; border-radius: 8px;
+  margin-top: 14px; text-align: center;
+  display: none;
+}
+.login-error.show { display: block; }
+.btn-logout {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.3);
+  color: #F87171; padding: 8px 16px;
+  border-radius: 8px; font-size: 0.8rem;
+  font-weight: 600; cursor: pointer;
+  transition: all 0.2s; font-family: 'Inter', sans-serif;
+}
+.btn-logout:hover { background: rgba(239,68,68,0.2); }
 </style>
 </head>
 <body>
+
+<!-- ── TELA DE LOGIN ── -->
+<div id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="lock-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <div class="login-title">Area Restrita</div>
+      <div class="login-sub">Painel de Analytics — Formula das Chaves</div>
+    </div>
+
+    <div class="login-field">
+      <label>E-mail</label>
+      <input type="email" id="login-email" placeholder="seu@email.com" autocomplete="email"
+             onkeydown="if(event.key==='Enter') document.getElementById('login-pass').focus()">
+    </div>
+    <div class="login-field">
+      <label>Senha</label>
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"
+             onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+
+    <button class="btn-login" onclick="doLogin()">Entrar no Painel</button>
+    <div class="login-error" id="login-error">E-mail ou senha incorretos. Tente novamente.</div>
+  </div>
+</div>
+
+<!-- ── CONTEUDO DO ADMIN (oculto ate login) ── -->
+<div id="admin-content" style="display:none;">
 
 <div class="admin-header">
   <div>
@@ -307,6 +429,7 @@ body {
     </div>
     <button class="btn-refresh" onclick="applyDateFilter()">Atualizar</button>
     <button class="btn-clear" onclick="clearData()">Limpar Dados</button>
+    <button class="btn-logout" onclick="doLogout()">Sair</button>
   </div>
 </div>
 
@@ -375,12 +498,10 @@ body {
   <!-- VIDEO ANALYTICS -->
   <div class="section-title">&#127916; Analytics do Video VSL</div>
   <div class="kpi-grid" id="video-kpi-grid" style="margin-bottom:24px;"></div>
+  <div id="video-insights" style="margin-bottom:16px;"></div>
   <div style="background:var(--dark-2);border:1px solid var(--border);border-radius:14px;padding:28px;margin-bottom:48px;">
-    <div style="font-size:0.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:20px;">Retencao de Audiencia — Onde as pessoas param de assistir</div>
+    <div style="font-size:0.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:20px;">Curva de Retencao — % de viewers em cada marco do video</div>
     <div id="video-retention-chart"></div>
-    <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:0.68rem;color:var(--muted);">
-      <span>0%</span><span>10%</span><span>20%</span><span>30%</span><span>40%</span><span>50%</span><span>60%</span><span>70%</span><span>80%</span><span>90%</span><span>100%</span>
-    </div>
     <div style="margin-top:20px;" id="video-dropoff-table"></div>
   </div>
 
@@ -426,7 +547,6 @@ body {
       <thead>
         <tr>
           <th>Nome</th>
-          <th>WhatsApp</th>
           <th>Data/Hora</th>
           <th>Sessao</th>
         </tr>
@@ -492,7 +612,6 @@ async function getAnalytics() {
 
     const leads = leadsData.map(l => ({
       name: l.name,
-      whatsapp: l.whatsapp,
       timestamp: l.created_at,
       sessionId: l.session_id
     })).reverse();
@@ -841,13 +960,12 @@ async function loadDashboard() {
   // Leads Table
   let leadsHtml = '';
   if (leads.length === 0) {
-    leadsHtml = '<tr><td colspan="4" class="empty">Nenhum lead capturado ainda.</td></tr>';
+    leadsHtml = '<tr><td colspan="3" class="empty">Nenhum lead capturado ainda.</td></tr>';
   } else {
     leads.slice().reverse().forEach(l => {
       leadsHtml += `
         <tr>
-          <td>${l.name || '-'}</td>
-          <td>${l.whatsapp || '-'}</td>
+          <td style="font-weight:600;">${l.name || '-'}</td>
           <td>${formatDate(l.timestamp)}</td>
           <td style="font-size:0.72rem; color: var(--muted);">${(l.sessionId || '').substring(0, 16)}...</td>
         </tr>
@@ -1075,104 +1193,260 @@ function saveConfig() {
 /* ============================================================
    VIDEO ANALYTICS
 ============================================================ */
-function getVideoStats() {
-  try { return JSON.parse(localStorage.getItem('chav_video_stats') || 'null') || { totalClicks: 0, sessions: [], dropBuckets: {} }; }
-  catch(e) { return { totalClicks: 0, sessions: [], dropBuckets: {} }; }
-}
-
 function loadVideoAnalytics(filteredEvents) {
-  var s = getVideoStats();
-  var sessions = s.sessions || [];
-  var totalClicks = s.totalClicks || 0;
+  if (!filteredEvents) filteredEvents = [];
 
-  if (filteredEvents) {
-    const startVal = document.getElementById('filter-start').value;
-    const endVal = document.getElementById('filter-end').value;
-    if (startVal || endVal) {
-      const validSessionIds = new Set(filteredEvents.map(e => e.sessionId));
-      sessions = sessions.filter(sess => validSessionIds.has(sess.id));
-      totalClicks = filteredEvents.filter(e => e.type === 'video_play').length;
+  // Map sessionId → { played, maxPct, completed, milestones }
+  var sessMap = {};
+  var totalPlayClicks = 0;
+
+  filteredEvents.forEach(function(e) {
+    if (!e.type || !e.type.startsWith('video_')) return;
+
+    if (!sessMap[e.sessionId]) {
+      sessMap[e.sessionId] = { played: false, maxPct: 0, completed: false, milestones: {} };
+    }
+    var s = sessMap[e.sessionId];
+
+    if (e.type === 'video_play') {
+      totalPlayClicks++;
+      s.played = true;
+    }
+    if (e.type === 'video_complete') {
+      s.completed = true;
+      s.maxPct = 100;
+    }
+    if (e.type === 'video_pause' && e.meta && e.meta.pct != null) {
+      s.maxPct = Math.max(s.maxPct, Number(e.meta.pct));
+    }
+    if (e.type === 'video_milestone' && e.meta && e.meta.pct != null) {
+      var p = Number(e.meta.pct);
+      s.milestones[p] = true;
+      s.maxPct = Math.max(s.maxPct, p);
+    }
+  });
+
+  var sessions = Object.values(sessMap);
+  var uniqueViewers = sessions.length;
+
+  // Marcos rastreados pelo video: 0 (play), 10, 25, 50, 75, 90, 100 (concluiu)
+  var MILESTONES = [0, 10, 25, 50, 75, 90, 100];
+  var MILESTONE_LABELS = {
+    0: 'Inicio — Clicou Play',
+    10: 'Marco de 10%',
+    25: 'Marco de 25%',
+    50: 'Marco de 50% — Metade',
+    75: 'Marco de 75%',
+    90: 'Marco de 90%',
+    100: '100% — Completaram'
+  };
+
+  // Contar viewers em cada marco
+  var retention = {};
+  MILESTONES.forEach(function(m) {
+    if (m === 0) {
+      retention[m] = uniqueViewers;
+    } else if (m === 100) {
+      retention[m] = sessions.filter(function(s) { return s.completed; }).length;
+    } else {
+      // Conta quem atingiu este ponto via milestone OU maxPct >= m
+      retention[m] = sessions.filter(function(s) { return s.milestones[m] || s.maxPct >= m; }).length;
+    }
+  });
+
+  // KPIs
+  var avgPct = uniqueViewers > 0
+    ? sessions.reduce(function(acc, s) { return acc + s.maxPct; }, 0) / uniqueViewers
+    : 0;
+  var completions = retention[100];
+  var completionRate = uniqueViewers > 0 ? ((completions / uniqueViewers) * 100).toFixed(1) : '0.0';
+  var avgPlays = uniqueViewers > 0 ? (totalPlayClicks / uniqueViewers).toFixed(1) : '0';
+  var reached50 = retention[50] || 0;
+  var mid50Rate = uniqueViewers > 0 ? ((reached50 / uniqueViewers) * 100).toFixed(1) : '0.0';
+
+  document.getElementById('video-kpi-grid').innerHTML =
+    '<div class="kpi"><div class="kpi-label">Viewers Unicos</div><div class="kpi-value blue">' + uniqueViewers + '</div><div class="kpi-sub">Sessoes que clicaram Play</div></div>' +
+    '<div class="kpi"><div class="kpi-label">Media Assistida</div><div class="kpi-value amber">' + avgPct.toFixed(0) + '%</div><div class="kpi-sub">% media do video por viewer</div></div>' +
+    '<div class="kpi"><div class="kpi-label">Chegaram na Metade</div><div class="kpi-value ' + (parseFloat(mid50Rate) >= 50 ? 'green' : 'amber') + '">' + reached50 + '</div><div class="kpi-sub">' + mid50Rate + '% dos viewers (50%)</div></div>' +
+    '<div class="kpi"><div class="kpi-label">Concluiram</div><div class="kpi-value green">' + completions + '</div><div class="kpi-sub">Taxa: ' + completionRate + '% dos viewers</div></div>';
+
+  if (uniqueViewers === 0) {
+    document.getElementById('video-retention-chart').innerHTML =
+      '<div style="text-align:center;color:var(--muted);padding:48px;font-size:0.9rem;">Nenhum dado de video ainda. Os viewers precisam assistir o video na pagina de resultado.</div>';
+    document.getElementById('video-dropoff-table').innerHTML = '';
+    document.getElementById('video-insights').innerHTML = '';
+    return;
+  }
+
+  // Curva de retencao — uma barra por marco rastreado
+  var chartHtml = '';
+  MILESTONES.forEach(function(m) {
+    var viewers = retention[m] || 0;
+    var barW = uniqueViewers > 0 ? (viewers / uniqueViewers) * 100 : 0;
+    var color = barW >= 60 ? '#10B981' : barW >= 30 ? '#F59E0B' : '#EF4444';
+    var bgColor = barW >= 60 ? 'rgba(16,185,129,0.08)' : barW >= 30 ? 'rgba(245,158,11,0.08)' : 'rgba(239,68,68,0.08)';
+    var label = m === 0 ? 'Play' : m === 100 ? '100%' : m + '%';
+    chartHtml +=
+      '<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;padding:4px 0;">' +
+        '<div style="width:52px;font-size:0.75rem;color:var(--muted);text-align:right;flex-shrink:0;font-weight:700;">' + label + '</div>' +
+        '<div style="flex:1;height:32px;background:rgba(255,255,255,0.04);border-radius:6px;overflow:hidden;">' +
+          '<div style="height:100%;width:' + barW.toFixed(1) + '%;background:' + color + ';border-radius:6px;transition:width 0.7s ease;display:flex;align-items:center;padding-left:12px;min-width:' + (viewers > 0 ? '2px' : '0') + ';">' +
+            '<span style="font-size:0.73rem;font-weight:800;color:rgba(255,255,255,0.95);white-space:nowrap;">' + (viewers > 0 ? viewers + ' viewers' : '') + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div style="width:52px;font-size:0.78rem;font-weight:800;color:' + color + ';text-align:right;flex-shrink:0;">' + barW.toFixed(0) + '%</div>' +
+      '</div>';
+  });
+  document.getElementById('video-retention-chart').innerHTML = chartHtml;
+
+  // Tabela detalhada de queda por marco
+  var worstDropPct = 0;
+  var worstDropLabel = '';
+
+  var tableHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;margin-top:8px;">';
+  tableHtml += '<thead><tr>' +
+    '<th style="text-align:left;padding:10px 14px;color:var(--muted);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid var(--border)">Marco do Video</th>' +
+    '<th style="text-align:right;padding:10px 14px;color:var(--muted);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid var(--border)">Viewers</th>' +
+    '<th style="text-align:right;padding:10px 14px;color:var(--muted);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid var(--border)">Retencao</th>' +
+    '<th style="text-align:right;padding:10px 14px;color:var(--muted);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid var(--border)">Saidas</th>' +
+    '<th style="text-align:right;padding:10px 14px;color:var(--muted);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid var(--border)">Queda</th>' +
+    '</tr></thead><tbody>';
+
+  MILESTONES.forEach(function(m, i) {
+    var viewers = retention[m] || 0;
+    var pctRetained = uniqueViewers > 0 ? ((viewers / uniqueViewers) * 100).toFixed(1) : '0.0';
+    var prev = i > 0 ? (retention[MILESTONES[i - 1]] || 0) : viewers;
+    var exits = i > 0 ? Math.max(0, prev - viewers) : 0;
+    var dropRate = i > 0 && prev > 0 ? ((exits / prev) * 100).toFixed(1) : null;
+    var isHighDrop = dropRate !== null && parseFloat(dropRate) > 20;
+    var retColor = parseFloat(pctRetained) >= 60 ? '#10B981' : parseFloat(pctRetained) >= 30 ? '#F59E0B' : '#EF4444';
+
+    if (isHighDrop && parseFloat(dropRate) > worstDropPct) {
+      worstDropPct = parseFloat(dropRate);
+      worstDropLabel = MILESTONE_LABELS[m];
+    }
+
+    tableHtml += '<tr>' +
+      '<td style="padding:10px 14px;border-bottom:1px solid var(--border);font-weight:600;color:' + (m === 100 ? '#10B981' : 'var(--white)') + ';">' + MILESTONE_LABELS[m] + '</td>' +
+      '<td style="padding:10px 14px;border-bottom:1px solid var(--border);text-align:right;font-weight:700;">' + viewers + '</td>' +
+      '<td style="padding:10px 14px;border-bottom:1px solid var(--border);text-align:right;font-weight:800;color:' + retColor + ';">' + pctRetained + '%</td>' +
+      '<td style="padding:10px 14px;border-bottom:1px solid var(--border);text-align:right;color:' + (exits > 0 ? 'var(--danger)' : 'var(--muted)') + ';">' + (exits > 0 ? '−' + exits : i === 0 ? '—' : '0') + '</td>' +
+      '<td style="padding:10px 14px;border-bottom:1px solid var(--border);text-align:right;font-weight:700;color:' + (isHighDrop ? 'var(--danger)' : 'var(--muted)') + ';">' + (dropRate !== null ? dropRate + '%' + (isHighDrop ? ' ⚠️' : '') : '—') + '</td>' +
+    '</tr>';
+  });
+  tableHtml += '</tbody></table>';
+  document.getElementById('video-dropoff-table').innerHTML = tableHtml;
+
+  // Insights automaticos da VSL
+  var vslInsHtml = '';
+  if (uniqueViewers >= 3) {
+    var cRate = parseFloat(completionRate);
+    var avgPctNum = parseFloat(avgPct.toFixed(0));
+
+    if (cRate >= 50) {
+      vslInsHtml += '<div class="insight-card success"><span class="insight-icon">🎬</span><div class="insight-text">VSL com otima retencao: <strong>' + completionRate + '% dos viewers completam o video</strong>. Hook e ritmo estao engajando bem.</div></div>';
+    } else if (cRate >= 25) {
+      vslInsHtml += '<div class="insight-card warning"><span class="insight-icon">🎬</span><div class="insight-text">Taxa de conclusao do VSL: <strong>' + completionRate + '%</strong>. Considere encurtar ou tornar mais dinamica a parte onde os viewers saem.</div></div>';
+    } else if (cRate < 25) {
+      vslInsHtml += '<div class="insight-card danger"><span class="insight-icon">🎬</span><div class="insight-text">Taxa de conclusao do VSL muito baixa: <strong>' + completionRate + '%</strong>. A maioria abandona antes do final. Revise os primeiros 25% do video — sao decisivos para retencao.</div></div>';
+    }
+
+    if (worstDropLabel) {
+      vslInsHtml += '<div class="insight-card warning"><span class="insight-icon">📉</span><div class="insight-text">Maior queda de audiencia: <strong>' + worstDropLabel + ' (' + worstDropPct.toFixed(0) + '% de saida nesse ponto)</strong>. Investigue o que esta acontecendo nesse trecho do video e considere encurtar ou reordenar o conteudo.</div></div>';
+    }
+
+    if (avgPctNum < 30) {
+      vslInsHtml += '<div class="insight-card danger"><span class="insight-icon">⏱️</span><div class="insight-text">Media de apenas <strong>' + avgPctNum + '% do video assistido</strong>. O hook inicial nao esta prendendo atencao. Comece com prova social ou resultado direto nos primeiros 30 segundos.</div></div>';
+    } else if (avgPctNum >= 60) {
+      vslInsHtml += '<div class="insight-card success"><span class="insight-icon">⏱️</span><div class="insight-text">Media de <strong>' + avgPctNum + '% do video assistido</strong>. Excelente — os leads estao altamente engajados com o conteudo do VSL.</div></div>';
+    }
+
+    if (totalPlayClicks > 0 && uniqueViewers > 0) {
+      var playRatio = totalPlayClicks / uniqueViewers;
+      if (playRatio > 1.5) {
+        vslInsHtml += '<div class="insight-card info"><span class="insight-icon">🔁</span><div class="insight-text">Media de <strong>' + parseFloat(avgPlays) + ' cliques no play por viewer</strong>. Os usuarios estao assistindo mais de uma vez — sinal de alto interesse no conteudo.</div></div>';
+      }
     }
   }
 
-  // Viewers únicos = sessões únicas que assistiram
-  var uniqueViewers = sessions.length;
-
-  // Média de % assistida por viewer único
-  var avgPct = uniqueViewers > 0
-    ? sessions.reduce(function(sum, x) { return sum + (x.pct || 0); }, 0) / uniqueViewers
-    : 0;
-
-  // Concluíram = sessões únicas que completaram o vídeo
-  var completions = sessions.filter(function(x) { return x.completed; }).length;
-  var completionRate = uniqueViewers > 0 ? ((completions / uniqueViewers) * 100).toFixed(1) : '0.0';
-
-  // Replays médios por viewer
-  var avgClicks = uniqueViewers > 0 ? (totalClicks / uniqueViewers).toFixed(1) : '0.0';
-
-  // KPIs — métricas corretas por usuário único
-  document.getElementById('video-kpi-grid').innerHTML =
-    '<div class="kpi"><div class="kpi-label">Viewers Unicos</div><div class="kpi-value blue">' + uniqueViewers + '</div><div class="kpi-sub">Usuarios unicos que assistiram</div></div>' +
-    '<div class="kpi"><div class="kpi-label">Media Assistida</div><div class="kpi-value amber">' + avgPct.toFixed(1) + '%</div><div class="kpi-sub">% media do video por viewer</div></div>' +
-    '<div class="kpi"><div class="kpi-label">Concluiram</div><div class="kpi-value green">' + completions + '</div><div class="kpi-sub">Taxa: ' + completionRate + '% dos viewers</div></div>' +
-    '<div class="kpi"><div class="kpi-label">Cliques no Play</div><div class="kpi-value red">' + totalClicks + '</div><div class="kpi-sub">Avg ' + avgClicks + 'x por viewer (replays)</div></div>';
-
-  // Retention chart — build cumulative retention from dropBuckets
-  // dropBuckets[X] = how many stopped AT bucket X. Retention at X = total plays - sum of drops before X
-  var buckets = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
-  // Build retention: viewers remaining at each bucket
-  // Use sessions data to compute: at each 10% mark, how many sessions had pct >= that mark
-  var retention = {};
-  buckets.forEach(function(b) {
-    retention[b] = sessions.filter(function(x) { return (x.pct || 0) >= b; }).length;
-  });
-  var maxRetention = uniqueViewers || 1;
-
-  var chartHtml = '';
-  var tableHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;margin-top:16px;">' +
-    '<thead><tr>' +
-    '<th style="text-align:left;padding:8px 12px;color:var(--muted);font-size:0.7rem;text-transform:uppercase;border-bottom:1px solid var(--border)">Ponto do Video</th>' +
-    '<th style="text-align:right;padding:8px 12px;color:var(--muted);font-size:0.7rem;text-transform:uppercase;border-bottom:1px solid var(--border)">Viewers Restantes</th>' +
-    '<th style="text-align:right;padding:8px 12px;color:var(--muted);font-size:0.7rem;text-transform:uppercase;border-bottom:1px solid var(--border)">% de Retencao</th>' +
-    '<th style="text-align:right;padding:8px 12px;color:var(--muted);font-size:0.7rem;text-transform:uppercase;border-bottom:1px solid var(--border)">Saidas nesse ponto</th>' +
-    '</tr></thead><tbody>';
-
-  buckets.forEach(function(b, i) {
-    var viewers = retention[b] || 0;
-    var pctRetained = maxRetention > 0 ? ((viewers / maxRetention) * 100).toFixed(1) : '0.0';
-    var barW = maxRetention > 0 ? (viewers / maxRetention) * 100 : 0;
-    var exits = i < buckets.length - 1 ? Math.max(0, (retention[b] || 0) - (retention[buckets[i+1]] || 0)) : (retention[b] || 0);
-    var color = barW > 60 ? '#10B981' : barW > 35 ? '#F59E0B' : '#EF4444';
-    chartHtml +=
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">' +
-        '<div style="width:36px;font-size:0.7rem;color:var(--muted);text-align:right;flex-shrink:0;">' + b + '%</div>' +
-        '<div style="flex:1;height:28px;background:rgba(255,255,255,0.03);border-radius:6px;overflow:hidden;">' +
-          '<div style="height:100%;width:' + barW.toFixed(1) + '%;background:' + color + ';border-radius:6px;transition:width 0.6s ease;display:flex;align-items:center;padding-left:8px;">' +
-            '<span style="font-size:0.7rem;font-weight:700;color:rgba(255,255,255,0.9);">' + (viewers > 0 ? viewers : '') + '</span>' +
-          '</div>' +
-        '</div>' +
-        '<div style="width:44px;font-size:0.72rem;font-weight:700;color:' + color + ';text-align:right;flex-shrink:0;">' + pctRetained + '%</div>' +
-      '</div>';
-    tableHtml +=
-      '<tr>' +
-        '<td style="padding:8px 12px;border-bottom:1px solid var(--border);color:var(--white);font-weight:600;">Marca de ' + b + '%' + (b === 0 ? ' (Inicio)' : b === 100 ? ' (Final)' : '') + '</td>' +
-        '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:right;">' + viewers + '</td>' +
-        '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:right;color:' + color + ';font-weight:700;">' + pctRetained + '%</td>' +
-        '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:right;color:' + (exits > 0 ? 'var(--danger)' : 'var(--muted)') + ';">' + (exits > 0 ? '-' + exits + ' viewers' : '—') + '</td>' +
-      '</tr>';
-  });
-  tableHtml += '</tbody></table>';
-
-  document.getElementById('video-retention-chart').innerHTML = uniqueViewers > 0 ? chartHtml : '<div style="text-align:center;color:var(--muted);padding:32px;">Nenhum dado de video ainda. Usuarios precisam assistir o video na pagina de resultado.</div>';
-  document.getElementById('video-dropoff-table').innerHTML = uniqueViewers > 0 ? tableHtml : '';
+  document.getElementById('video-insights').innerHTML = vslInsHtml;
 }
 
-// Load on start
-loadConfigUI();
-loadDashboard();
+// ── AUTENTICACAO ──
+const ADMIN_EMAIL = 'eduardoeustaquio@gmail.com';
+const ADMIN_PASS  = 'Edu301128-';
+const SESSION_KEY = 'chav_admin_auth';
 
-// Auto-refresh every 10 seconds
-setInterval(function() { loadDashboard(); }, 10000);
+function doLogin() {
+  var email = document.getElementById('login-email').value.trim().toLowerCase();
+  var pass  = document.getElementById('login-pass').value;
+  var errEl = document.getElementById('login-error');
+
+  document.getElementById('login-email').classList.remove('error');
+  document.getElementById('login-pass').classList.remove('error');
+  errEl.classList.remove('show');
+
+  if (email !== ADMIN_EMAIL || pass !== ADMIN_PASS) {
+    document.getElementById('login-email').classList.add('error');
+    document.getElementById('login-pass').classList.add('error');
+    errEl.classList.add('show');
+    document.getElementById('login-pass').value = '';
+    document.getElementById('login-pass').focus();
+    return;
+  }
+
+  // Grava sessao com timestamp (expira em 8h)
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify({ ok: true, ts: Date.now() }));
+  showAdmin();
+}
+
+function doLogout() {
+  sessionStorage.removeItem(SESSION_KEY);
+  document.getElementById('admin-content').style.display = 'none';
+  document.getElementById('login-overlay').style.display  = 'flex';
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-pass').value  = '';
+  document.getElementById('login-error').classList.remove('show');
+}
+
+function showAdmin() {
+  document.getElementById('login-overlay').style.display  = 'none';
+  document.getElementById('admin-content').style.display  = 'block';
+  loadConfigUI();
+  loadDashboard();
+}
+
+function checkAuth() {
+  try {
+    var raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return false;
+    var s = JSON.parse(raw);
+    // Sessao valida por 8 horas
+    if (!s.ok || Date.now() - s.ts > 8 * 3600 * 1000) {
+      sessionStorage.removeItem(SESSION_KEY);
+      return false;
+    }
+    return true;
+  } catch(e) { return false; }
+}
+
+// Inicializa: checa autenticacao antes de qualquer coisa
+if (checkAuth()) {
+  showAdmin();
+} else {
+  // Foca no campo de email ao carregar
+  setTimeout(function() {
+    var el = document.getElementById('login-email');
+    if (el) el.focus();
+  }, 100);
+}
+
+// Auto-refresh a cada 10s (so roda se autenticado)
+setInterval(function() {
+  if (checkAuth()) loadDashboard();
+}, 10000);
 </script>
+
+</div> <!-- fim #admin-content -->
 </body>
 </html>
