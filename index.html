@@ -1228,6 +1228,36 @@ footer {
   margin-bottom: 14px;
 }
 .price-installment strong { color: #1e293b; font-weight: 700; }
+.price-install-label {
+  font-size: 0.78rem; font-weight: 700; color: #64748b;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: -4px;
+}
+.price-install-prefix {
+  font-family: var(--font-cond);
+  font-size: 1.55rem; font-weight: 900;
+  color: #334155; padding-top: 14px; margin-right: 2px;
+}
+.price-no-interest {
+  font-size: 0.75rem; color: #94a3b8; margin-bottom: 10px; margin-top: -2px;
+}
+.price-or-row {
+  display: flex; align-items: center; gap: 10px; margin: 10px 0 6px;
+}
+.price-or-line { flex: 1; height: 1px; background: #e2e8f0; }
+.price-or-text {
+  font-size: 0.7rem; color: #94a3b8; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.price-cash-row {
+  display: flex; align-items: baseline; gap: 5px;
+  justify-content: center; margin-bottom: 12px;
+}
+.price-cash-val {
+  font-family: var(--font-cond);
+  font-size: 1.7rem; font-weight: 900; color: #1e293b;
+}
+.price-cash-label { font-size: 0.8rem; color: #64748b; font-weight: 600; }
 .price-economy {
   display: inline-flex; align-items: center; gap: 6px;
   background: rgba(5,150,105,0.09);
@@ -1884,12 +1914,24 @@ footer {
             <span class="price-from-val">R$ 97,00</span>
             <span class="price-discount-badge">-52%</span>
           </div>
+          <!-- Parcelamento em destaque -->
+          <div class="price-install-label">em ate</div>
           <div class="price-main-row">
-            <span class="price-currency">R$</span>
-            <span class="price-amount">47</span>
-            <span class="price-cents">,00</span>
+            <span class="price-install-prefix">11x de R$</span>
+            <span class="price-amount">5</span>
+            <span class="price-cents">,34</span>
           </div>
-          <div class="price-installment">ou <strong>12x de R$ 4,56</strong> no cartao sem juros</div>
+          <div class="price-no-interest">no cartao sem juros</div>
+          <!-- Opcao a vista -->
+          <div class="price-or-row">
+            <span class="price-or-line"></span>
+            <span class="price-or-text">ou</span>
+            <span class="price-or-line"></span>
+          </div>
+          <div class="price-cash-row">
+            <span class="price-cash-val">R$ 47,00</span>
+            <span class="price-cash-label">a vista</span>
+          </div>
           <div class="price-economy">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
             Voce economiza R$ 50,00 nesta oferta
@@ -1939,7 +1981,7 @@ footer {
         </div>
 
         <a href="#" class="btn-secondary" onclick="handleCtaClick(event)" style="margin-top:12px;">
-          Parcelar em 12x de R$ 4,56 no cartao
+          Parcelar em ate 11x de R$ 5,34 no cartao
         </a>
 
         <div class="lifetime-badge">
