@@ -1993,14 +1993,39 @@ function saveAnalytics(data) {
 const SUPABASE_URL = 'https://dqeyevscnuyqbwdhkqsv.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_vuadAZQRCewO-TZsLgOTYg_HFC7fxe3';
 
+function getUTMs() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const utms = {
+      source: params.get('utm_source') || params.get('src') || '',
+      medium: params.get('utm_medium') || '',
+      campaign: params.get('utm_campaign') || '',
+      content: params.get('utm_content') || '',
+      term: params.get('utm_term') || ''
+    };
+    if (utms.source || utms.medium || utms.campaign) {
+      sessionStorage.setItem('chav_utms', JSON.stringify(utms));
+      return utms;
+    }
+    return JSON.parse(sessionStorage.getItem('chav_utms') || 'null');
+  } catch(e) { return null; }
+}
+const windowUTMs = getUTMs();
+
 function trackEvent(type, meta) {
+  // Inject UTMs into meta
+  let finalMeta = meta || {};
+  if (windowUTMs) {
+    finalMeta.utm = windowUTMs;
+  }
+  
   // Salva no localStorage (legado)
   const data = getAnalytics();
   data.events.push({
     type: type,
     timestamp: new Date().toISOString(),
     sessionId: SESSION_ID,
-    meta: meta || null
+    meta: Object.keys(finalMeta).length ? finalMeta : null
   });
   saveAnalytics(data);
 
@@ -2016,7 +2041,7 @@ function trackEvent(type, meta) {
     body: JSON.stringify({
       session_id: SESSION_ID,
       type: type,
-      meta: meta || null
+      meta: Object.keys(finalMeta).length ? finalMeta : null
     })
   }).catch(() => {});
 }
@@ -2536,7 +2561,18 @@ function handleCtaClick(e) {
 
   // Redirect to checkout after allowing pixels and tracking to fire
   setTimeout(() => {
-    window.location.href = 'https://ggcheckout.app/checkout/v5/aJcEFtYgGP5qVMjD6Cdq';
+    let checkoutUrl = 'https://ggcheckout.app/checkout/v5/aJcEFtYgGP5qVMjD6Cdq';
+    if (windowUTMs) {
+      const u = new URL(checkoutUrl);
+      if (windowUTMs.source) u.searchParams.set('utm_source', windowUTMs.source);
+      if (windowUTMs.medium) u.searchParams.set('utm_medium', windowUTMs.medium);
+      if (windowUTMs.campaign) u.searchParams.set('utm_campaign', windowUTMs.campaign);
+      if (windowUTMs.content) u.searchParams.set('utm_content', windowUTMs.content);
+      // Alguns checkouts usam 'src' para o rastreio principal
+      if (windowUTMs.source) u.searchParams.set('src', windowUTMs.source + (windowUTMs.campaign ? '_' + windowUTMs.campaign : ''));
+      checkoutUrl = u.toString();
+    }
+    window.location.href = checkoutUrl;
   }, 400);
 }
 

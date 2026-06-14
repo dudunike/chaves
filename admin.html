@@ -304,6 +304,15 @@ body {
     <div id="q-flow-table"></div>
   </div>
 
+  <!-- UTM Analytics -->
+  <div class="section-title">&#128227; Origem das Vendas e Trafego (UTMs)</div>
+  <div style="background:var(--dark-2);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:48px;">
+    <p style="font-size:0.75rem; color:var(--muted); margin-top:0; margin-bottom:16px;">
+      Acompanhe de qual anuncio ou post os seus leads estao vindo. As vendas marcadas aqui representam cliques que foram para o checkout.
+    </p>
+    <div id="utm-container"></div>
+  </div>
+
   <!-- Live Active Leads -->
   <div class="section-title">
     <span style="display:inline-block; width:10px; height:10px; background:var(--success); border-radius:50%; margin-right:8px; animation: pulse-dot 2s infinite;"></span>
@@ -957,6 +966,50 @@ async function loadDashboard() {
 
   document.getElementById('q-flow-container').innerHTML = flowHtml;
   document.getElementById('q-flow-table').innerHTML = flowTableHtml;
+
+  // ============================================================
+  //  UTM ANALYTICS
+  // ============================================================
+  const utmStats = {};
+  
+  // Agrupar leads/page views por UTM source/campaign
+  events.forEach(e => {
+    if (e.meta && e.meta.utm && (e.meta.utm.source || e.meta.utm.campaign)) {
+      const key = `${e.meta.utm.source || '(Sem Fonte)'} / ${e.meta.utm.campaign || '(Sem Campanha)'}`;
+      if (!utmStats[key]) utmStats[key] = { views: 0, leads: 0, checkouts: 0 };
+      
+      if (e.type === 'page_view') utmStats[key].views++;
+      if (e.type === 'lead_captured') utmStats[key].leads++;
+      if (e.type === 'cta_click') utmStats[key].checkouts++;
+    }
+  });
+
+  let utmHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;">';
+  utmHtml += '<thead><tr>';
+  utmHtml += '<th style="text-align:left;padding:8px 12px;color:var(--muted);font-size:0.7rem;text-transform:uppercase;border-bottom:1px solid var(--border)">Origem / Campanha</th>';
+  utmHtml += '<th style="text-align:right;padding:8px 12px;color:var(--muted);font-size:0.7rem;text-transform:uppercase;border-bottom:1px solid var(--border)">Visitas</th>';
+  utmHtml += '<th style="text-align:right;padding:8px 12px;color:var(--muted);font-size:0.7rem;text-transform:uppercase;border-bottom:1px solid var(--border)">Leads</th>';
+  utmHtml += '<th style="text-align:right;padding:8px 12px;color:var(--muted);font-size:0.7rem;text-transform:uppercase;border-bottom:1px solid var(--border)">Checkouts</th>';
+  utmHtml += '</tr></thead><tbody>';
+
+  const utmKeys = Object.keys(utmStats).sort((a,b) => utmStats[b].views - utmStats[a].views);
+  
+  if (utmKeys.length === 0) {
+    utmHtml += `<tr><td colspan="4" style="padding:16px;text-align:center;color:var(--muted);">Nenhuma UTM rastreada ainda. O tráfego anterior não possuía rastreamento.</td></tr>`;
+  } else {
+    utmKeys.forEach(k => {
+      const s = utmStats[k];
+      utmHtml += `<tr>
+        <td style="padding:8px 12px;border-bottom:1px solid var(--border);font-weight:600;">${k}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:right;">${s.views}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:right;">${s.leads}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:right;color:var(--success);font-weight:700;">${s.checkouts}</td>
+      </tr>`;
+    });
+  }
+  utmHtml += '</tbody></table>';
+
+  document.getElementById('utm-container').innerHTML = utmHtml;
 }
 
 // Settings / Config Logic
