@@ -1511,7 +1511,13 @@ footer {
     </p>
   </div>
 
-  <button class="btn-start" onclick="trackEvent('intro_cta_click'); showScreen('screen-lead');">
+  <button class="btn-start" onclick="  // Forca o track do page_view caso o usuario clique muito rapido antes do timer de 1.5s
+  if (!hasTrackedPageView) {
+    hasTrackedPageView = true;
+    trackEvent('page_view');
+  }
+
+  trackEvent('intro_cta_click'); showScreen('screen-lead');">
     Iniciar Diagnostico Gratuito
     <span class="btn-start-sub">Descubra onde esta o gargalo da sua operacao</span>
   </button>
@@ -1534,11 +1540,7 @@ footer {
     </p>
     <div class="form-group">
       <label>Seu nome</label>
-      <input type="text" id="lead-name" placeholder="Ex: Joao" autocomplete="given-name" onkeydown="if(event.key==='Enter') document.getElementById('lead-whats').focus()">
-    </div>
-    <div class="form-group">
-      <label>WhatsApp (Opcional)</label>
-      <input type="tel" id="lead-whats" placeholder="(11) 99999-9999" autocomplete="tel" onkeydown="if(event.key==='Enter') captureLead()">
+      <input type="text" id="lead-name" placeholder="Ex: Joao" autocomplete="given-name" onkeydown="if(event.key==='Enter') captureLead()">
     </div>
 
     <div style="margin-bottom: 20px; padding: 12px 16px; background: rgba(16,185,129,0.08); border-radius: 8px; border: 1px solid rgba(16,185,129,0.2); font-size: 0.82rem; color: #34D399; font-weight: 600; display: flex; align-items: center; gap: 10px; text-align: left;">
@@ -2092,19 +2094,25 @@ const SESSION_ID = 'ses_' + Date.now() + '_' + Math.random().toString(36).substr
 
 // Track page view ONLY on human interaction to block ALL advanced bots
 let hasTrackedPageView = false;
-function trackRealPageView() {
+const pageLoadTime = Date.now();
+
+function trackRealPageView(e) {
   if (hasTrackedPageView) return;
+  
+  // Bots executam interacoes instantaneas. Exigir pelo menos 1.5s de permanencia
+  if (Date.now() - pageLoadTime < 1500 && (!e || e.type !== 'click')) return;
+  
   hasTrackedPageView = true;
   trackEvent('page_view');
   
   // Remove listeners after tracking
-  ['touchstart', 'mousemove', 'scroll', 'keydown', 'click'].forEach(evt => {
+  ['touchstart', 'mousemove', 'keydown', 'click'].forEach(evt => {
     window.removeEventListener(evt, trackRealPageView);
   });
 }
 
-// Listen for actual human behavior
-['touchstart', 'mousemove', 'scroll', 'keydown', 'click'].forEach(evt => {
+// Escuta por comportamento humano real (scroll removido pois bots simulam scroll)
+['touchstart', 'mousemove', 'keydown', 'click'].forEach(evt => {
   window.addEventListener(evt, trackRealPageView, { passive: true });
 });
 
@@ -2266,7 +2274,6 @@ function showScreen(id) {
 ============================================================ */
 function captureLead() {
   const name = document.getElementById('lead-name').value.trim();
-  const whats = document.getElementById('lead-whats').value.trim();
   
   if (!name) {
     document.getElementById('lead-name').style.borderColor = '#EF4444';
@@ -2274,9 +2281,9 @@ function captureLead() {
     return;
   }
   userName = name;
-  userWhatsapp = whats;
-  trackLead(name, whats);
-  trackEvent('lead_captured', { name: name, whatsapp: whats });
+  userWhatsapp = '';
+  trackLead(name, '');
+  trackEvent('lead_captured', { name: name });
   sendLeadWebhook();
 
   document.getElementById('ph').classList.remove('hidden');
