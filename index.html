@@ -1229,15 +1229,14 @@ footer {
 }
 .price-installment strong { color: #1e293b; font-weight: 700; }
 .price-install-label {
-  font-size: 0.78rem; font-weight: 700; color: #64748b;
-  text-transform: uppercase; letter-spacing: 0.08em;
-  margin-bottom: -4px;
+  font-size: 1rem; font-weight: 600; color: #475569;
+  letter-spacing: 0.02em; margin-bottom: -10px;
+  text-align: center;
 }
-.price-install-prefix {
-  font-family: var(--font-cond);
-  font-size: 1.55rem; font-weight: 900;
-  color: #334155; padding-top: 14px; margin-right: 2px;
-}
+.price-install-label strong { color: #059669; font-size: 1.15rem; }
+.price-amount--green { color: #059669; }
+.price-currency--green { color: #059669; }
+.price-cents--green { color: #059669; }
 .price-no-interest {
   font-size: 0.75rem; color: #94a3b8; margin-bottom: 10px; margin-top: -2px;
 }
@@ -1915,11 +1914,11 @@ footer {
             <span class="price-discount-badge">-52%</span>
           </div>
           <!-- Parcelamento em destaque -->
-          <div class="price-install-label">em ate</div>
+          <div class="price-install-label">em ate <strong>11x</strong> de</div>
           <div class="price-main-row">
-            <span class="price-install-prefix">11x de R$</span>
-            <span class="price-amount">5</span>
-            <span class="price-cents">,34</span>
+            <span class="price-currency price-currency--green">R$</span>
+            <span class="price-amount price-amount--green">5</span>
+            <span class="price-cents price-cents--green">,34</span>
           </div>
           <div class="price-no-interest">no cartao sem juros</div>
           <!-- Opcao a vista -->
