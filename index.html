@@ -1866,33 +1866,12 @@ footer {
           </div>
         </div>
 
-        <div class="roi-line reveal-up" style="transition-delay: 0.7s;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
-          1 servico de codificacao = R$200 a R$600 —
-          <strong>o guia se paga no primeiro atendimento.</strong>
-        </div>
-
-        <div class="timer-section reveal-up" style="transition-delay: 0.8s;">
-          <div class="timer-label">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            Esta oferta expira em:
-          </div>
-          <div class="timer">
-            <div class="tb"><span class="tn" id="t-h">23</span><span class="tl">Horas</span></div>
-            <div class="tb"><span class="tn" id="t-m">59</span><span class="tl">Min</span></div>
-            <div class="tb"><span class="tn" id="t-s">59</span><span class="tl">Seg</span></div>
-          </div>
-        </div>
-
-        <a href="#" class="btn-cta btn-cta--pulse" id="cta-main" onclick="handleCtaClick(event)">
+        <a href="#" class="btn-cta btn-cta--pulse" id="cta-main" onclick="handleCtaClick(event)" style="margin-top:4px;">
           DESTRAVAR ACESSO VITALICIO AGORA
           <span class="btn-cta-sub">Pague 1 unica vez e tenha o material e atualizacoes para sempre!</span>
         </a>
-        <a href="#" class="btn-secondary" onclick="handleCtaClick(event)">
-          Parcelar em 12x de R$ 4,56 no cartao
-        </a>
 
-        <div class="security-badges">
+        <div class="security-badges" style="margin-top:16px;">
           <div class="sec-badge">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             <span>Pagamento<br>100% Seguro</span>
@@ -1911,7 +1890,13 @@ footer {
           </div>
         </div>
 
-        <div class="guarantee-box">
+        <div class="roi-line reveal-up" style="margin-top:16px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+          1 servico de codificacao = R$200 a R$600 —
+          <strong>o guia se paga no primeiro atendimento.</strong>
+        </div>
+
+        <div class="guarantee-box" style="margin-top:16px;">
           <div class="guarantee-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -1922,6 +1907,10 @@ footer {
             <p>Se em 7 dias voce aplicar nosso procedimento em campo e nao recuperar o seu investimento na mesma hora, aperte um botao e eu devolvo 100% do seu dinheiro. O risco esta todo nas minhas costas.</p>
           </div>
         </div>
+
+        <a href="#" class="btn-secondary" onclick="handleCtaClick(event)" style="margin-top:12px;">
+          Parcelar em 12x de R$ 4,56 no cartao
+        </a>
 
         <div class="lifetime-badge">
           <strong>Acesso Vitalicio Liberado</strong>
@@ -2519,22 +2508,7 @@ function buildResult() {
    COUNTDOWN TIMER
 ============================================================ */
 function startTimer() {
-  const KEY = 'chav_timer_end';
-  let end = sessionStorage.getItem(KEY)
-    ? parseInt(sessionStorage.getItem(KEY))
-    : Date.now() + (23 * 3600 + 59 * 60 + 59) * 1000;
-  sessionStorage.setItem(KEY, end);
-
-  function pad(n) { return n < 10 ? '0' + n : '' + n; }
-
-  function tick() {
-    const diff = Math.max(0, end - Date.now());
-    document.getElementById('t-h').textContent = pad(Math.floor(diff / 3600000));
-    document.getElementById('t-m').textContent = pad(Math.floor((diff % 3600000) / 60000));
-    document.getElementById('t-s').textContent = pad(Math.floor((diff % 60000) / 1000));
-    if (diff > 0) setTimeout(tick, 1000);
-  }
-  tick();
+  // Timer removido da UI — funcao mantida para nao quebrar chamadas existentes
 }
 
 /* ============================================================
@@ -2590,7 +2564,7 @@ function handleCtaClick(e) {
 
   // Redirect to checkout after allowing pixels and tracking to fire
   setTimeout(() => {
-    let checkoutUrl = 'https://ggcheckout.app/checkout/v5/aJcEFtYgGP5qVMjD6Cdq';
+    let checkoutUrl = 'https://ggcheckout.app/checkout/v5/Nqsi2X6FStmHhDkXfmiC';
     if (windowUTMs) {
       const u = new URL(checkoutUrl);
       if (windowUTMs.source) u.searchParams.set('utm_source', windowUTMs.source);
