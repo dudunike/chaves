@@ -2012,7 +2012,18 @@ function getUTMs() {
 }
 const windowUTMs = getUTMs();
 
+function isRealUser() {
+  try {
+    const ua = navigator.userAgent || '';
+    if (/bot|googlebot|crawler|spider|robot|crawling|facebookexternalhit|Facebot|WhatsApp/i.test(ua)) return false;
+    if (navigator.webdriver) return false;
+    return true;
+  } catch(e) { return true; }
+}
+
 function trackEvent(type, meta) {
+  if (!isRealUser()) return; // Nao rastrear bots do FB/Google
+  
   // Inject UTMs into meta
   let finalMeta = meta || {};
   if (windowUTMs) {
@@ -2047,6 +2058,8 @@ function trackEvent(type, meta) {
 }
 
 function trackLead(name, whatsapp) {
+  if (!isRealUser()) return; // Nao rastrear bots
+
   // Salva no localStorage (legado)
   const data = getAnalytics();
   data.leads.push({
