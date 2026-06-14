@@ -2090,8 +2090,23 @@ function trackLead(name, whatsapp) {
 // Session
 const SESSION_ID = 'ses_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
 
-// Track page view
-trackEvent('page_view');
+// Track page view ONLY on human interaction to block ALL advanced bots
+let hasTrackedPageView = false;
+function trackRealPageView() {
+  if (hasTrackedPageView) return;
+  hasTrackedPageView = true;
+  trackEvent('page_view');
+  
+  // Remove listeners after tracking
+  ['touchstart', 'mousemove', 'scroll', 'keydown', 'click'].forEach(evt => {
+    window.removeEventListener(evt, trackRealPageView);
+  });
+}
+
+// Listen for actual human behavior
+['touchstart', 'mousemove', 'scroll', 'keydown', 'click'].forEach(evt => {
+  window.addEventListener(evt, trackRealPageView, { passive: true });
+});
 
 /* ============================================================
    QUIZ DATA — 7 Strategic Questions
