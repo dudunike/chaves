@@ -248,8 +248,14 @@ body {
     <h1>Painel de Analytics</h1>
     <span class="tag">Formula das Chaves</span>
   </div>
-  <div>
-    <button class="btn-refresh" onclick="loadDashboard()">Atualizar</button>
+  <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+    <div style="display: flex; gap: 8px; align-items: center; background: var(--dark); padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border);">
+      <span style="color: var(--muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Período:</span>
+      <input type="date" id="filter-start" style="background: transparent; border: none; color: var(--white); font-size: 0.8rem; outline: none; color-scheme: dark;" onchange="applyDateFilter()">
+      <span style="color: var(--muted); font-size: 0.8rem;">até</span>
+      <input type="date" id="filter-end" style="background: transparent; border: none; color: var(--white); font-size: 0.8rem; outline: none; color-scheme: dark;" onchange="applyDateFilter()">
+    </div>
+    <button class="btn-refresh" onclick="applyDateFilter()">Atualizar</button>
     <button class="btn-clear" onclick="clearData()">Limpar Dados</button>
   </div>
 </div>
@@ -423,9 +429,32 @@ async function getAnalytics() {
 }
 
 async function clearData() {
-  if (confirm('Limpando dados no Supabase... Isso não é suportado pelo painel para não apagar o banco. Para apagar, acesse o painel do Supabase diretamente.')) {
-    // Disabled destructive action
+  if (confirm('Tem certeza que deseja apagar TODOS os dados do Supabase e relatórios locais? Essa ação não pode ser desfeita!')) {
+    try {
+      const headers = {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json'
+      };
+      
+      // Apaga todos os eventos e leads (o filtro session_id=not.is.null pega todos os registros validos)
+      await fetch(`${SUPABASE_URL}/rest/v1/chaves_events?session_id=not.is.null`, { method: 'DELETE', headers });
+      await fetch(`${SUPABASE_URL}/rest/v1/chaves_leads?session_id=not.is.null`, { method: 'DELETE', headers });
+      
+      // Limpa storage local do video
+      localStorage.removeItem('chav_analytics');
+      localStorage.removeItem('chav_video_stats');
+      
+      alert('Dados apagados com sucesso!');
+      applyDateFilter();
+    } catch (e) {
+      alert('Erro ao apagar dados: ' + e);
+    }
   }
+}
+
+function applyDateFilter() {
+  loadDashboard();
 }
 
 function countEvents(events, type) {
@@ -457,9 +486,29 @@ async function loadDashboard() {
   document.getElementById('kpi-grid').innerHTML = '<div style="padding: 20px; color: var(--success); font-weight: bold;">Conectando ao Banco de Dados (Supabase)...</div>';
   
   const data = await getAnalytics();
-  const events = data.events || [];
-  const leads = data.leads || [];
-  const webhooks = data.webhooks || [];
+  let events = data.events || [];
+  let leads = data.leads || [];
+  let webhooks = data.webhooks || [];
+
+  // FILTER BY DATE
+  const startVal = document.getElementById('filter-start').value;
+  const endVal = document.getElementById('filter-end').value;
+
+  if (startVal) {
+    const startObj = new Date(startVal + 'T00:00:00');
+    events = events.filter(e => new Date(e.timestamp) >= startObj);
+    leads = leads.filter(l => new Date(l.timestamp) >= startObj);
+    webhooks = webhooks.filter(w => new Date(w.created_at) >= startObj);
+  }
+  if (endVal) {
+    const endObj = new Date(endVal + 'T23:59:59.999');
+    events = events.filter(e => new Date(e.timestamp) <= endObj);
+    leads = leads.filter(l => new Date(l.timestamp) <= endObj);
+    webhooks = webhooks.filter(w => new Date(w.created_at) <= endObj);
+  }
+
+  // Pass events to Video Analytics so it can filter by the same date range
+  loadVideoAnalytics(events);
 
   // Calculate KPIs
   const totalSessions = getUniqueSessions(events);
@@ -780,10 +829,20 @@ function getVideoStats() {
   catch(e) { return { totalClicks: 0, sessions: [], dropBuckets: {} }; }
 }
 
-function loadVideoAnalytics() {
+function loadVideoAnalytics(filteredEvents) {
   var s = getVideoStats();
   var sessions = s.sessions || [];
   var totalClicks = s.totalClicks || 0;
+
+  if (filteredEvents) {
+    const startVal = document.getElementById('filter-start').value;
+    const endVal = document.getElementById('filter-end').value;
+    if (startVal || endVal) {
+      const validSessionIds = new Set(filteredEvents.map(e => e.sessionId));
+      sessions = sessions.filter(sess => validSessionIds.has(sess.id));
+      totalClicks = filteredEvents.filter(e => e.type === 'video_play').length;
+    }
+  }
 
   // Viewers únicos = sessões únicas que assistiram
   var uniqueViewers = sessions.length;
@@ -860,10 +919,9 @@ function loadVideoAnalytics() {
 // Load on start
 loadConfigUI();
 loadDashboard();
-loadVideoAnalytics();
 
 // Auto-refresh every 10 seconds
-setInterval(function() { loadDashboard(); loadVideoAnalytics(); }, 10000);
+setInterval(function() { loadDashboard(); }, 10000);
 </script>
 </body>
 </html>
